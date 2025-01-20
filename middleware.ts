@@ -9,24 +9,23 @@ export async function middleware(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
     console.log("User:", user);
 
-    // Redirect to login if user is not signed in
-    if (!user && !request.nextUrl.pathname.startsWith('/auth') && request.nextUrl.pathname !== '/sign-in') {
-      console.log("Redirecting to /sign-in");
-      return NextResponse.redirect(new URL('/sign-in', request.url));
-    }
+    // Define public routes
+    const publicRoutes = ["/", "/categories", "/sign-in", "/sign-up"];
+    const isPublicRoute = publicRoutes.includes(request.nextUrl.pathname);
 
-    // Allow access to auth pages (sign-in, sign-up, forgot-password)
-    if (request.nextUrl.pathname.startsWith('/auth')) {
-      console.log("Allowing access to auth page");
+    // Allow access to public routes
+    if (isPublicRoute) {
+      console.log("Allowing access to public route:", request.nextUrl.pathname);
       return NextResponse.next();
     }
 
     // Protect dashboard and quizzes routes
-    if (request.nextUrl.pathname.startsWith('/dashboard') || request.nextUrl.pathname.startsWith('/quizzes')) {
-      if (!user) {
-        console.log("Redirecting to /sign-in (protected route)");
-        return NextResponse.redirect(new URL('/sign-in', request.url));
-      }
+    const protectedRoutes = ["/dashboard", "/quizzes"];
+    const isProtectedRoute = protectedRoutes.some(route => request.nextUrl.pathname.startsWith(route));
+
+    if (isProtectedRoute && !user) {
+      console.log("Redirecting to /sign-in (protected route)");
+      return NextResponse.redirect(new URL('/sign-in', request.url));
     }
 
     console.log("Allowing request to proceed");
