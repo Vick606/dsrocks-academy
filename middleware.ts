@@ -1,8 +1,28 @@
-import { type NextRequest } from "next/server";
-import { updateSession } from "@/utils/supabase/middleware";
+import { type NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/utils/supabase/server";
 
 export async function middleware(request: NextRequest) {
-  return await updateSession(request);
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // Redirect to login if user is not signed in
+  if (!user && !request.nextUrl.pathname.startsWith('/auth')) {
+    return NextResponse.redirect(new URL('/sign-in', request.url));
+  }
+
+  // Allow access to auth pages (sign-in, sign-up, forgot-password)
+  if (request.nextUrl.pathname.startsWith('/auth')) {
+    return NextResponse.next();
+  }
+
+  // Protect dashboard and quizzes routes
+  if (request.nextUrl.pathname.startsWith('/dashboard') || request.nextUrl.pathname.startsWith('/quizzes')) {
+    if (!user) {
+      return NextResponse.redirect(new URL('/sign-in', request.url));
+    }
+  }
+
+  return NextResponse.next();
 }
 
 export const config = {
