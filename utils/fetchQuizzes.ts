@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '../utils/supabase/client';
 
 export async function fetchFeaturedQuizzes() {
   const supabase = createClient();
