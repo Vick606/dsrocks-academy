@@ -1,21 +1,44 @@
+'use client';
+
 import { createSupabaseClient } from '@/utils/supabase/client';
 import { fetchQuizById } from '@/utils/fetchQuiz';
 import { Question } from '@/components/Question';
+import { Results } from '@/components/Results';
 import { redirect } from 'next/navigation';
+import { useState } from 'react';
 
-export default async function QuizPage({ params }: { params: { id: string } }) {
+export default function QuizPage({ params }: { params: { id: string } }) {
   const supabase = createSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const [userAnswers, setUserAnswers] = useState<string[]>([]);
+  const [quiz, setQuiz] = useState<any>(null);
 
-  // Redirect to login if user is not signed in
-  if (!user) {
-    redirect('/login');
-  }
+  // Fetch quiz data on component mount
+  useState(async () => {
+    const { data: { user } } = await supabase.auth.getUser();
 
-  const quiz = await fetchQuizById(params.id);
+    // Redirect to login if user is not signed in
+    if (!user) {
+      redirect('/login');
+    }
+
+    const quizData = await fetchQuizById(params.id);
+    if (!quizData) {
+      console.error('Quiz not found');
+      return;
+    }
+
+    setQuiz(quizData);
+    setUserAnswers(Array(quizData.questions.length).fill(''));
+  }, []);
+
+  const handleAnswerSelect = (questionIndex: number, answer: string) => {
+    const newAnswers = [...userAnswers];
+    newAnswers[questionIndex] = answer;
+    setUserAnswers(newAnswers);
+  };
 
   if (!quiz) {
-    return <div>Quiz not found</div>;
+    return <div>Loading...</div>;
   }
 
   return (
@@ -23,10 +46,16 @@ export default async function QuizPage({ params }: { params: { id: string } }) {
       <div className="container mx-auto px-4 py-16">
         <h1 className="text-5xl font-bold mb-8 text-center">{quiz.title}</h1>
         <div className="space-y-8">
-          {quiz.questions.map((question, index) => (
-            <Question key={question.id} question={question} questionNumber={index + 1} />
+          {quiz.questions.map((question: any, index: number) => (
+            <Question
+              key={question.id}
+              question={question}
+              questionNumber={index + 1}
+              onAnswerSelect={(answer) => handleAnswerSelect(index, answer)}
+            />
           ))}
         </div>
+        <Results questions={quiz.questions} userAnswers={userAnswers} />
       </div>
     </div>
   );
