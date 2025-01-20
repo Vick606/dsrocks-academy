@@ -1,35 +1,38 @@
 'use client';
 
 import { createSupabaseClient } from '@/utils/supabase/client';
-import { fetchQuizById } from '@/utils/fetchQuiz';
-import { Question } from '@/components/Question';
-import { Results } from '@/components/Results';
+import { fetchQuizById } from '@/utils/fetchQuizzes';
+import { Question } from '@/app/quizzes/[id]/components/Question';
+import { Results } from '@/app/quizzes/[id]/components/Results';
 import { redirect } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function QuizPage({ params }: { params: { id: string } }) {
   const supabase = createSupabaseClient();
   const [userAnswers, setUserAnswers] = useState<string[]>([]);
   const [quiz, setQuiz] = useState<any>(null);
 
-  // Fetch quiz data on component mount
-  useState(async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+  useEffect(() => {
+    const fetchQuizData = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
 
-    // Redirect to login if user is not signed in
-    if (!user) {
-      redirect('/login');
-    }
+      // Redirect to login if user is not signed in
+      if (!user) {
+        redirect('/login');
+      }
 
-    const quizData = await fetchQuizById(params.id);
-    if (!quizData) {
-      console.error('Quiz not found');
-      return;
-    }
+      const quizData = await fetchQuizById(params.id);
+      if (!quizData) {
+        console.error('Quiz not found');
+        return;
+      }
 
-    setQuiz(quizData);
-    setUserAnswers(Array(quizData.questions.length).fill(''));
-  }, []);
+      setQuiz(quizData);
+      setUserAnswers(Array(quizData.questions.length).fill(''));
+    };
+
+    fetchQuizData();
+  }, [params.id, supabase.auth]);
 
   const handleAnswerSelect = (questionIndex: number, answer: string) => {
     const newAnswers = [...userAnswers];
