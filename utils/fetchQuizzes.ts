@@ -1,7 +1,7 @@
-import { createClient } from '../utils/supabase/client';
+import { createSupabaseClient } from '../utils/supabase/client';
 
 export async function fetchFeaturedQuizzes() {
-  const supabase = createClient();
+  const supabase = createSupabaseClient();
   const { data: quizzes, error } = await supabase
     .from('quizzes')
     .select('*')
