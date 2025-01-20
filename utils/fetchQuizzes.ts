@@ -1,17 +1,17 @@
 import { createSupabaseClient } from '../utils/supabase/client';
 
-export async function fetchFeaturedQuizzes() {
+export async function fetchQuizById(id: string) {
   const supabase = createSupabaseClient();
-  const { data: quizzes, error } = await supabase
+  const { data: quiz, error } = await supabase
     .from('quizzes')
     .select('*')
-    .eq('is_featured', true)
-    .limit(3);
+    .eq('id', id)
+    .single();
 
   if (error) {
-    console.error('Error fetching quizzes:', error);
-    return [];
+    console.error('Error fetching quiz:', error);
+    return null;
   }
 
-  return quizzes;
+  return quiz;
 }
