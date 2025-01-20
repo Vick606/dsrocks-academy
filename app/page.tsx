@@ -1,4 +1,3 @@
-import Hero from "@/components/hero";
 import { QuizCard } from "@/components/QuizCard";
 import { fetchFeaturedQuizzes } from "@/utils/fetchQuizzes";
 import { hasEnvVars } from "@/utils/supabase/check-env-vars";
@@ -18,7 +17,7 @@ export default async function Home() {
             <a href="/categories" className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100">
               Explore Quizzes
             </a>
-            <a href="/signup" className="bg-transparent border border-white px-6 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600">
+            <a href="/sign-up" className="bg-transparent border border-white px-6 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600">
               Sign Up
             </a>
           </div>
