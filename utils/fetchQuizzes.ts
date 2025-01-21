@@ -80,3 +80,55 @@ export async function fetchUserProgress(userId: string) {
     achievements: achievements || [],
   };
 }
+
+// Award an achievement to a user
+export async function awardAchievement(userId: string, title: string, description: string) {
+  const supabase = createSupabaseClient();
+  const { error } = await supabase
+    .from('achievements')
+    .insert([{ user_id: userId, title, description }]);
+
+  if (error) {
+    console.error('Error awarding achievement:', error);
+    return false;
+  }
+
+  return true;
+}
+
+// Check and award achievements when a quiz is completed
+export async function checkAndAwardAchievements(userId: string, quizId: string) {
+  const supabase = createSupabaseClient();
+
+  // Fetch user's completed quizzes
+  const { data: completedQuizzes, error } = await supabase
+    .from('userprogress')
+    .select('quiz_id')
+    .eq('user_id', userId)
+    .eq('is_completed', true);
+
+  if (error) {
+    console.error('Error fetching completed quizzes:', error);
+    return;
+  }
+
+  // Award "First Quiz Completed" achievement if this is the first quiz
+  if (completedQuizzes.length === 1) {
+    await awardAchievement(userId, 'First Quiz Completed', 'You completed your first quiz!');
+  }
+
+  // Fetch total number of quizzes
+  const { data: allQuizzes, error: quizzesError } = await supabase
+    .from('quizzes')
+    .select('id');
+
+  if (quizzesError) {
+    console.error('Error fetching quizzes:', quizzesError);
+    return;
+  }
+
+  // Award "Mastery" achievement if all quizzes are completed
+  if (completedQuizzes.length === allQuizzes.length) {
+    await awardAchievement(userId, 'Mastery', 'You completed all quizzes!');
+  }
+}
