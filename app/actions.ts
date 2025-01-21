@@ -28,31 +28,40 @@ export const signUpAction = async (formData: FormData) => {
   });
 
   if (error) {
-    console.error(error.code + " " + error.message);
+    console.error("Sign-up error:", error.code, error.message);
     return encodedRedirect("error", "/sign-up", error.message);
-  } else {
-    return encodedRedirect(
-      "success",
-      "/sign-up",
-      "Thanks for signing up! Please check your email for a verification link.",
-    );
   }
+
+  return encodedRedirect(
+    "success",
+    "/sign-up",
+    "Thanks for signing up! Please check your email for a verification link.",
+  );
 };
 
 export const signInAction = async (formData: FormData) => {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
+
+  // Log the email and password for debugging
+  console.log("Attempting to sign in with:", { email, password });
+
   const supabase = await createClient();
 
-  const { error } = await supabase.auth.signInWithPassword({
+  // Attempt to sign in
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
 
   if (error) {
+    // Log the error for debugging
+    console.error("Sign-in error:", error.code, error.message);
     return encodedRedirect("error", "/sign-in", error.message);
   }
 
+  // Log successful sign-in
+  console.log("Sign-in successful:", data);
   return redirect("/dashboard");
 };
 
@@ -71,7 +80,7 @@ export const forgotPasswordAction = async (formData: FormData) => {
   });
 
   if (error) {
-    console.error(error.message);
+    console.error("Forgot password error:", error.code, error.message);
     return encodedRedirect(
       "error",
       "/forgot-password",
@@ -117,6 +126,7 @@ export const resetPasswordAction = async (formData: FormData) => {
   });
 
   if (error) {
+    console.error("Reset password error:", error.code, error.message);
     return encodedRedirect(
       "error",
       "/protected/reset-password",
@@ -133,6 +143,12 @@ export const resetPasswordAction = async (formData: FormData) => {
 
 export const signOutAction = async () => {
   const supabase = await createClient();
-  await supabase.auth.signOut();
+  const { error } = await supabase.auth.signOut();
+
+  if (error) {
+    console.error("Sign-out error:", error.code, error.message);
+    return encodedRedirect("error", "/", "Failed to sign out");
+  }
+
   return redirect("/sign-in");
 };
